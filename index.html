@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Blocks Without Blocks</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+
+    <body>
+    <div id="app">
+        <div id="overlay" class="overlay-dim">
+            <div class="popup">
+                <h2>Game Over</h2>
+                <div class="popup-scores">
+                    <div>Current score: <span id="popupScore">0</span></div>
+                    <div>Best score: <span id="popupHighScore">0</span></div>
+                </div>
+                <div class="popup-buttons">
+                    <button id="btnTryAgain" class="btn-primary">Try again</button>
+                    <button id="btnReset" class="btn-secondary">Reset to start</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- top bar -->
+        <div class="top-bar">
+            <div class="top-left">
+                <span class="brand-title">Blocks Without Blocks Questions</span>
+            </div>
+
+            <div class="top-center" id="quizTopCenter" style="visibility:hidden">
+                <div class="mode-toggle">
+                    <button class="mode-btn active" data-mode="term">Term -> Definition</button>
+                    <button class="mode-btn" data-mode="definition">Definition -> Term</button>
+                    <button class="mode-btn" data-mode="both">Mix Both</button>
+                </div>
+            </div>
+
+            <div class="top-right" id="quizTopRight" style="visibility:hidden; gap:10px;">
+                <button id="btnBack" class="btn-secondary" style="padding:5px 12px;font-size:12px;">Back</button>
+
+                <div class="score-box">
+                    <span class="score-main">Points: <span id="pointsDisplay">0</span></span>
+                    <span class="score-sub">High: <span id="highScoreDisplay">0</span></span>
+                </div>
+
+                <div class="hearts">
+                    <span class="heart" data-heart="1">♥</span>
+                    <span class="heart" data-heart="2">♥</span>
+                    <span class="heart" data-heart="3">♥</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 1 - home page / input screen / like the main one (LINE 455 COL 3)-->
+        
+    </div>
+</html>
