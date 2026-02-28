@@ -52,7 +52,568 @@
             </div>
         </div>
 
-        <!-- Screen 1 - home page / input screen / like the main one (LINE 455 COL 3)-->
-        
+        <!-- Screen 1 - home page / input screen / like the main one -->
+        <div id="screen1" class="screen active">
+            <div>
+                <h1>Welcome to Blocks Without Blocks</h1>
+                <p style="margin-top:8px;color:#455a64;font-size:14px;">Paste your terms and definitions, or load a saved set to generate quick fire questions to help you revise!</p>
+            </div>
+
+            <div style="margin-top:16px;">
+                <label for="pairsInput" style="font-size:13px;font-weight:600;">Enter term and definition pairs:</label>
+                <textarea id="pairsInput" placeholder="Example: photosynthesis,process by which plants make food
+                gravity,force that attracts objects towards each other"></textarea>
+                <div class="small-hint">
+                    Format:
+                    term1,definition1
+                    term2,definition2
+                    Blank lines are ignored. Each line must have exactly one comma.
+                </div>
+
+                <div class="error-text" id="inputError"></div>
+            </div>
+
+            <div style="margin-top:16px;">
+                <button id="btnCreate" class="btn-primary">Create Questions</button>
+            </div>
+
+            <!-- saved sets -->
+
+            <div class="saved-sets-row">
+                <label for="savedSetsSelects" style="font-size:13px;">Saved Sets:</label>
+                <select id="savedSetsSelects">
+                    <option value=" ">(none)</option>
+                </select>
+                <button id="btnLoadSet" class="btn-secondary">Load</button>
+                <button id="btnDeleteSet" class="btn-danger">Delete</button>
+            </div>
+
+            <div class="bottom-bar">
+                <span>Simple practice, stays on device and with a AMAZING teal theming....</span>
+                <span style="font-size:11px;">Tip: when creating definitions manually, keep them short so you can type them quicker!</span>
+            </div>
+        </div>
+
+        <!-- Screen 2 - waiting screen cus it looks pretty cool -->
+        <div id="screen2" class="screen">
+            <div class="centered">
+                <h2>Processing your terms - Get Ready...</h2>
+                <p style="margin-top:6px;color:#546e7a;font-size:14px;">Checking the format and getting your questions ready!</p>
+                <div class="waiting-bar">
+                    <div id="waitingFill" class="waiting-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- screen 3 - the actual quixxing screen! -->
+        <div id="screen3" class="screen">
+            <div class="question container">
+                <div class="question-card">
+                    <div class="question-label" id="questionLabel">Question</div>
+                    <div class="question-text" id="questionText">Your question will appear here</div>
+                </div>
+
+                <div class="answer-area">
+                    <input type="text" id="answerInput" placeholder="Type your answer and press Enter or Check" autocomplete="off">
+                    <div style="margin-top:8px;display:flex;gap:8px;">
+                        <button id="btnCheck" class="btn-primary" style="flex:0;">Check</button>
+                        <button id="btnSkip" class="btn-secondary" style="flex:0;">Skip</button>
+                    </div>
+                    <div id="feedback" class="feedback"></div>
+                </div>
+            </div>
+
+            <!-- div class bottom bar  -->
+            <div class="bottom-bar">
+                <span id="questionCountInfo"></span>
+                <span style="font-size:11px;">Lost a heart on a wrong answer. Second wrong: -2 points and retype to continue.</span>
+            </div>
+        </div>
+
+        <!-- saving indicator -->
+        <div id="savedIndicator" class="saved-indicator">
+            Saved Locally
+        </div>
     </div>
+
+    <script>
+        const screen1 = document.getElementById('screen1');
+        const screen2 = document.getElementById('screen2');
+        const screen3 = document.getElementById('screen3');
+
+        const quizTopCenter = document.getElementById('quizTopCenter');
+        const quizTopRight = document.getElementById('quizTopRight');
+
+        const pairsInput = document.getElementById('pairsInput');
+        const btnCreate = document.getElementById('btnCreate');
+        const inputError = document.getElementById('inputError');
+
+        const waitingFill = document.getElementById('waitingFill');
+
+        const btnBack = document.getElementById('btnBack');
+        const modeButtons = document.querySelectorAll('.mode-btn');
+
+        const questionLabel = document.getElementById('questionLabel');
+        const questionText = document.getElementById('questionText');
+        const answerInput = document.getElementById('answerInput');
+        const btnCheck = document.getElementById('btnCheck');
+        const btnSkip = document.getElementById('btnSkip');
+        const feedback = document.getElementById('feedback');
+        const questionCountInfo = document.getElementById('questionCountInfo');
+
+        const pointsDisplay = document.getElementById('pointsDisplay');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const heartsElems = document.querySelectorAll('.heart');
+
+        const savedIndicator = document.getElementById('savedIndicator');
+
+        const overlay = document.getElementById('overlay');
+        const popupScore = document.getElementById('popupScore');
+        const popupHighScore = document.getElementById('popupHighScore');
+        const btnTryAgain = document.getElementById('btnTryAgain');
+        const btnReset = document.getElementById('btnReset');
+
+        const savedSetsSelects = document.getElementById('savedSetsSelects');
+        const btnLoadSet = document.getElementById('btnLoadSet');
+        const btnDeleteSet = document.getElementById('btnDeleteSet');
+
+        let qaPairs = [];
+        let currentIndex = -1;
+        let currentDirection = 'termToDef';
+        let mode = 'term';
+        let points = 0;
+        let highScore = 0;
+        let hearts = 3;
+        let hadFirstWrong = false;
+        let totalAsked = 0;
+
+        let mustRetype = false;
+        let correctAnswerForRetype = '';
+        let pointsSinseHeart = 0;
+
+        let savingIntervalId = null;
+        let savedTimeoutID = null;
+
+        let savedSets = {};
+
+        function showScreen(id) {
+            [screen1, screen2, screen3].forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+
+            if (id === 'screen3') {
+                quizTopCenter.style.visibility = 'visible';
+                quizTopRight.style.visibility = 'visible';
+            } else {
+                quizTopCenter.style.visibility = 'hidden';
+                quizTopRight.style.visibility = 'hidden';
+            }
+        }
+
+        function parseInput(text) {
+    const lines = text.split(/\r?\n/);
+    const parsed = [];
+
+    for (let raw of lines) {
+      const line = raw.trim();
+      if (!line) continue;
+      const parts = line.split(',');
+      if (parts.length !== 2) {
+        return null;
+      }
+      const term = parts[0].trim();
+      const def = parts[1].trim();
+      if (!term || !def) {
+        return null;
+      }
+      parsed.push({ term, definition: def });
+    }
+
+    if (parsed.length === 0) return null;
+    return parsed;
+  }
+
+  function loadFromStorage() {
+    try {
+      const storedHigh = localStorage.getItem('bbnb_high_score');
+      if (storedHigh !== null) {
+        highScore = parseInt(storedHigh, 10) || 0;
+      }
+      const storedSets = localStorage.getItem('bbnb_saved_sets');
+      if (storedSets) {
+        savedSets = JSON.parse(storedSets);
+      }
+    } catch (e) {
+      highScore = 0;
+      savedSets = {};
+    }
+    highScoreDisplay.textContent = highScore;
+    refreshSavedSetsSelect();
+  }
+
+  function saveToStorage() {
+    try {
+      localStorage.setItem('bbnb_high_score', String(highScore));
+      localStorage.setItem('bbnb_last_points', String(points));
+      localStorage.setItem('bbnb_saved_sets', JSON.stringify(savedSets));
+    } catch (e) {}
+    showSavedIndicator();
+  }
+
+  function startAutoSaving() {
+    if (savingIntervalId) clearInterval(savingIntervalId);
+    savingIntervalId = setInterval(saveToStorage, 10000);
+  }
+
+  function stopAutoSaving() {
+    if (savingIntervalId) clearInterval(savingIntervalId);
+    savingIntervalId = null;
+  }
+
+  function showSavedIndicator() {
+    savedIndicator.classList.add('visible');
+    if (savedTimeoutId) clearTimeout(savedTimeoutId);
+    savedTimeoutId = setTimeout(() => {
+      savedIndicator.classList.remove('visible');
+    }, 1400);
+  }
+
+  function updateHeartsDisplay() {
+    heartsElems.forEach((el, index) => {
+      const heartNum = index + 1;
+      if (heartNum <= hearts) {
+        el.classList.remove('lost');
+      } else {
+        el.classList.add('lost');
+      }
+    });
+  }
+
+  function updatePointsDisplay() {
+    pointsDisplay.textContent = points;
+    if (points > highScore) {
+      highScore = points;
+      highScoreDisplay.textContent = highScore;
+    }
+  }
+
+  function pickNewQuestion() {
+    if (!qaPairs.length) return;
+
+    const prevIndex = currentIndex;
+    let newIndex;
+    if (qaPairs.length === 1) {
+      newIndex = 0;
+    } else {
+      do {
+        newIndex = Math.floor(Math.random() * qaPairs.length);
+      } while (newIndex === prevIndex);
+    }
+    currentIndex = newIndex;
+
+    if (mode === 'term') {
+      currentDirection = 'termToDef';
+    } else if (mode === 'definition') {
+      currentDirection = 'defToTerm';
+    } else {
+      currentDirection = Math.random() < 0.5 ? 'termToDef' : 'defToTerm';
+    }
+
+    const pair = qaPairs[currentIndex];
+    if (currentDirection === 'termToDef') {
+      questionLabel.textContent = 'Given the term, type the definition';
+      questionText.textContent = pair.term;
+    } else {
+      questionLabel.textContent = 'Given the definition, type the term';
+      questionText.textContent = pair.definition;
+    }
+
+    hadFirstWrong = false;
+    mustRetype = false;
+    correctAnswerForRetype = "";
+    totalAsked++;
+    questionCountInfo.textContent = `Question ${totalAsked}`;
+    feedback.textContent = '';
+    feedback.classList.remove('correct', 'wrong');
+
+    answerInput.value = '';
+    answerInput.focus();
+  }
+
+  function levenshtein(a, b) {
+    const matrix = Array.from({ length: a.length + 1 }, () => []);
+    for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+
+    for (let i = 1; i <= a.length; i++) {
+      for (let j = 1; j <= b.length; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j - 1] + cost
+        );
+      }
+    }
+    return matrix[a.length][b.length];
+  }
+
+  function normalizeAnswer(str) {
+    return str.trim().toLowerCase();
+  }
+
+  function handleWrongAnswer(correctAnswer) {
+    if (mustRetype) return;
+
+    if (!hadFirstWrong) {
+      hadFirstWrong = true;
+      hearts = Math.max(hearts - 1, 0);
+      updateHeartsDisplay();
+
+      feedback.textContent = "Incorrect. Try again.";
+      feedback.classList.remove('correct');
+      feedback.classList.add('wrong');
+
+      if (hearts <= 0) endGame();
+    } else {
+      hearts = Math.max(hearts - 1, 0);
+      points = Math.max(points - 2, 0);
+      updateHeartsDisplay();
+      updatePointsDisplay();
+
+      feedback.textContent = `Incorrect again. The correct answer is: ${correctAnswer}. Type it to continue.`;
+      feedback.classList.remove('correct');
+      feedback.classList.add('wrong');
+
+      if (hearts <= 0) {
+        endGame();
+        return;
+      }
+
+      mustRetype = true;
+      correctAnswerForRetype = correctAnswer;
+    }
+  }
+
+  function handleCheckAnswer() {
+    if (currentIndex < 0 || currentIndex >= qaPairs.length) return;
+
+    const userAnswerRaw = answerInput.value;
+    const userAnswer = normalizeAnswer(userAnswerRaw);
+
+    if (!userAnswer) return;
+
+    // Retype mode: must type the shown correct answer, no penalty/reward
+    if (mustRetype) {
+      if (userAnswer === normalizeAnswer(correctAnswerForRetype)) {
+        mustRetype = false;
+        correctAnswerForRetype = "";
+        feedback.textContent = "Correct. Moving on.";
+        feedback.classList.remove('wrong');
+        feedback.classList.add('correct');
+        setTimeout(pickNewQuestion, 600);
+      } else {
+        feedback.textContent = "Incorrect. Type the correct answer exactly as shown.";
+        feedback.classList.remove('correct');
+        feedback.classList.add('wrong');
+      }
+      return;
+    }
+
+    const pair = qaPairs[currentIndex];
+    const correctAnswer =
+      currentDirection === 'termToDef'
+        ? normalizeAnswer(pair.definition)
+        : normalizeAnswer(pair.term);
+
+    const distance = levenshtein(userAnswer, correctAnswer);
+
+    if (userAnswer === correctAnswer || distance <= 3) {
+      feedback.textContent = 'Correct!';
+      feedback.classList.remove('wrong');
+      feedback.classList.add('correct');
+
+      points += 1;
+      pointsSinceHeart += 1;
+      updatePointsDisplay();
+
+      if (pointsSinceHeart >= 5 && hearts < 3) {
+        hearts += 1;
+        pointsSinceHeart = 0;
+        updateHeartsDisplay();
+        feedback.textContent = "Correct! You earned a heart!";
+      }
+
+      setTimeout(pickNewQuestion, 600);
+    } else {
+      handleWrongAnswer(correctAnswer);
+    }
+  }
+
+  function resetGameStateKeepPairs() {
+    points = 0;
+    hearts = 3;
+    totalAsked = 0;
+    hadFirstWrong = false;
+    mustRetype = false;
+    correctAnswerForRetype = "";
+    pointsSinceHeart = 0;
+    updatePointsDisplay();
+    updateHeartsDisplay();
+    feedback.textContent = '';
+    feedback.classList.remove('correct', 'wrong');
+    pickNewQuestion();
+  }
+
+  function endGame() {
+    popupScore.textContent = points;
+    popupHighScore.textContent = highScore;
+    overlay.classList.add('active');
+  }
+
+  function refreshSavedSetsSelect() {
+    savedSetsSelect.innerHTML = '<option value="">(none)</option>';
+    Object.keys(savedSets).forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      savedSetsSelect.appendChild(opt);
+    });
+  }
+
+  function startQuizWithCurrentInput(askToSave) {
+    const text = pairsInput.value;
+    const parsed = parseInput(text);
+
+    if (!parsed) {
+      inputError.textContent = 'Check your format. Each non-empty line must be: term,definition';
+      return;
+    }
+
+    qaPairs = parsed;
+    inputError.textContent = '';
+
+    if (askToSave) {
+      const saveChoice = confirm("Do you want to save these words as a set?");
+      if (saveChoice) {
+        const name = prompt("Enter a name for this set:");
+        if (name) {
+          savedSets[name] = pairsInput.value.trim();
+          localStorage.setItem('bbnb_saved_sets', JSON.stringify(savedSets));
+          refreshSavedSetsSelect();
+        }
+      }
+    }
+
+    showScreen('screen2');
+    waitingFill.style.width = '0%';
+    setTimeout(() => waitingFill.style.width = '40%', 50);
+    setTimeout(() => waitingFill.style.width = '75%', 450);
+    setTimeout(() => waitingFill.style.width = '100%', 850);
+
+    setTimeout(() => {
+      if (!qaPairs || !qaPairs.length) {
+        showScreen('screen1');
+        inputError.textContent = 'Something went wrong. Please try again.';
+        return;
+      }
+      points = 0;
+      hearts = 3;
+      totalAsked = 0;
+      currentIndex = -1;
+      hadFirstWrong = false;
+      mustRetype = false;
+      correctAnswerForRetype = "";
+      pointsSinceHeart = 0;
+      updateHeartsDisplay();
+      updatePointsDisplay();
+      showScreen('screen3');
+      pickNewQuestion();
+      startAutoSaving();
+    }, 1400);
+  }
+
+  btnCreate.addEventListener('click', () => {
+    startQuizWithCurrentInput(true);
+  });
+
+  btnBack.addEventListener('click', () => {
+    stopAutoSaving();
+    overlay.classList.remove('active');
+    showScreen('screen1');
+  });
+
+  modeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      modeButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      mode = btn.getAttribute('data-mode');
+      if (qaPairs.length) {
+        pickNewQuestion();
+      }
+    });
+  });
+
+  btnCheck.addEventListener('click', handleCheckAnswer);
+
+  btnSkip.addEventListener('click', () => {
+    if (currentIndex < 0 || currentIndex >= qaPairs.length) return;
+    const pair = qaPairs[currentIndex];
+    const correctAnswer =
+      currentDirection === 'termToDef'
+        ? pair.definition
+        : pair.term;
+
+    points = Math.max(points - 2, 0);
+    updatePointsDisplay();
+
+    feedback.textContent = `Skipped. Correct answer: ${correctAnswer} (−2 points)`;
+    feedback.classList.remove('wrong');
+    feedback.classList.add('correct');
+
+    setTimeout(pickNewQuestion, 900);
+  });
+
+  answerInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleCheckAnswer();
+    }
+  });
+
+  btnTryAgain.addEventListener('click', () => {
+    overlay.classList.remove('active');
+    resetGameStateKeepPairs();
+  });
+
+  btnReset.addEventListener('click', () => {
+    overlay.classList.remove('active');
+    stopAutoSaving();
+    showScreen('screen1');
+  });
+
+  btnLoadSet.addEventListener('click', () => {
+    const name = savedSetsSelect.value;
+    if (!name) return;
+    const text = savedSets[name];
+    if (!text) return;
+    pairsInput.value = text;
+    startQuizWithCurrentInput(false);
+  });
+
+  btnDeleteSet.addEventListener('click', () => {
+    const name = savedSetsSelect.value;
+    if (!name) return;
+    const ok = confirm(`Delete saved set "${name}"? This cannot be undone.`);
+    if (!ok) return;
+    delete savedSets[name];
+    localStorage.setItem('bbnb_saved_sets', JSON.stringify(savedSets));
+    refreshSavedSetsSelect();
+  });
+
+  loadFromStorage();
+
+    </script>
+
+    <!-- heuirhqwiuerhiuqwehrqwehruiwqhriuqwehriuqwehqwekrjhqwijrhqwuierhiqwehriuqwehreiuqwehriuqwhruiqewhruiqwhiruhqwiurhqwierhuqwerriuqwr-->
+</body>
 </html>

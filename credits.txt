@@ -1,0 +1,5 @@
+This app was created by Jacob N for Hack Club's Flavortown YSWS, based off Quizlet's Blocks game, to allow thousand of students to revise. 
+
+Credits to Quizlet and GitHub Copilot. 
+
+I am open to feedback, help, etc! 
