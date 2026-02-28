@@ -3,6 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <title>Blocks Without Blocks</title>
+        <author>Jacob N - Hack Club</author>
         <link rel="stylesheet" href="style.css" />
     </head>
 
@@ -80,9 +81,9 @@
             <!-- saved sets -->
 
             <div class="saved-sets-row">
-                <label for="savedSetsSelects" style="font-size:13px;">Saved Sets:</label>
-                <select id="savedSetsSelects">
-                    <option value=" ">(none)</option>
+                <label for="savedSetsSelect" style="font-size:13px;">Saved Sets:</label>
+                <select id="savedSetsSelect">
+                    <option value="">(none)</option>
                 </select>
                 <button id="btnLoadSet" class="btn-secondary">Load</button>
                 <button id="btnDeleteSet" class="btn-danger">Delete</button>
@@ -107,7 +108,7 @@
 
         <!-- screen 3 - the actual quixxing screen! -->
         <div id="screen3" class="screen">
-            <div class="question container">
+            <div class="question-container">
                 <div class="question-card">
                     <div class="question-label" id="questionLabel">Question</div>
                     <div class="question-text" id="questionText">Your question will appear here</div>
@@ -138,78 +139,78 @@
 
     <script>
         const screen1 = document.getElementById('screen1');
-        const screen2 = document.getElementById('screen2');
-        const screen3 = document.getElementById('screen3');
+  const screen2 = document.getElementById('screen2');
+  const screen3 = document.getElementById('screen3');
 
-        const quizTopCenter = document.getElementById('quizTopCenter');
-        const quizTopRight = document.getElementById('quizTopRight');
+  const quizTopCenter = document.getElementById('quizTopCenter');
+  const quizTopRight = document.getElementById('quizTopRight');
 
-        const pairsInput = document.getElementById('pairsInput');
-        const btnCreate = document.getElementById('btnCreate');
-        const inputError = document.getElementById('inputError');
+  const pairsInput = document.getElementById('pairsInput');
+  const btnCreate = document.getElementById('btnCreate');
+  const inputError = document.getElementById('inputError');
 
-        const waitingFill = document.getElementById('waitingFill');
+  const waitingFill = document.getElementById('waitingFill');
 
-        const btnBack = document.getElementById('btnBack');
-        const modeButtons = document.querySelectorAll('.mode-btn');
+  const btnBack = document.getElementById('btnBack');
+  const modeButtons = document.querySelectorAll('.mode-btn');
 
-        const questionLabel = document.getElementById('questionLabel');
-        const questionText = document.getElementById('questionText');
-        const answerInput = document.getElementById('answerInput');
-        const btnCheck = document.getElementById('btnCheck');
-        const btnSkip = document.getElementById('btnSkip');
-        const feedback = document.getElementById('feedback');
-        const questionCountInfo = document.getElementById('questionCountInfo');
+  const questionLabel = document.getElementById('questionLabel');
+  const questionText = document.getElementById('questionText');
+  const answerInput = document.getElementById('answerInput');
+  const btnCheck = document.getElementById('btnCheck');
+  const btnSkip = document.getElementById('btnSkip');
+  const feedback = document.getElementById('feedback');
+  const questionCountInfo = document.getElementById('questionCountInfo');
 
-        const pointsDisplay = document.getElementById('pointsDisplay');
-        const highScoreDisplay = document.getElementById('highScoreDisplay');
-        const heartsElems = document.querySelectorAll('.heart');
+  const pointsDisplay = document.getElementById('pointsDisplay');
+  const highScoreDisplay = document.getElementById('highScoreDisplay');
+  const heartsElems = document.querySelectorAll('.heart');
 
-        const savedIndicator = document.getElementById('savedIndicator');
+  const savedIndicator = document.getElementById('savedIndicator');
 
-        const overlay = document.getElementById('overlay');
-        const popupScore = document.getElementById('popupScore');
-        const popupHighScore = document.getElementById('popupHighScore');
-        const btnTryAgain = document.getElementById('btnTryAgain');
-        const btnReset = document.getElementById('btnReset');
+  const overlay = document.getElementById('overlay');
+  const popupScore = document.getElementById('popupScore');
+  const popupHighScore = document.getElementById('popupHighScore');
+  const btnTryAgain = document.getElementById('btnTryAgain');
+  const btnReset = document.getElementById('btnReset');
 
-        const savedSetsSelects = document.getElementById('savedSetsSelects');
-        const btnLoadSet = document.getElementById('btnLoadSet');
-        const btnDeleteSet = document.getElementById('btnDeleteSet');
+  const savedSetsSelect = document.getElementById('savedSetsSelect');
+  const btnLoadSet = document.getElementById('btnLoadSet');
+  const btnDeleteSet = document.getElementById('btnDeleteSet');
 
-        let qaPairs = [];
-        let currentIndex = -1;
-        let currentDirection = 'termToDef';
-        let mode = 'term';
-        let points = 0;
-        let highScore = 0;
-        let hearts = 3;
-        let hadFirstWrong = false;
-        let totalAsked = 0;
+  let qaPairs = [];
+  let currentIndex = -1;
+  let currentDirection = 'termToDef';
+  let mode = 'term';
+  let points = 0;
+  let highScore = 0;
+  let hearts = 3;
+  let hadFirstWrong = false;
+  let totalAsked = 0;
 
-        let mustRetype = false;
-        let correctAnswerForRetype = '';
-        let pointsSinseHeart = 0;
+  let mustRetype = false;
+  let correctAnswerForRetype = "";
+  let pointsSinceHeart = 0;
 
-        let savingIntervalId = null;
-        let savedTimeoutID = null;
+  let savingIntervalId = null;
+  let savedTimeoutId = null;
 
-        let savedSets = {};
+  let savedSets = {};
 
-        function showScreen(id) {
-            [screen1, screen2, screen3].forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+  function showScreen(id) {
+    [screen1, screen2, screen3].forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
 
-            if (id === 'screen3') {
-                quizTopCenter.style.visibility = 'visible';
-                quizTopRight.style.visibility = 'visible';
-            } else {
-                quizTopCenter.style.visibility = 'hidden';
-                quizTopRight.style.visibility = 'hidden';
-            }
-        }
+    if (id === 'screen3') {
+      quizTopCenter.style.visibility = 'visible';
+      quizTopRight.style.visibility = 'visible';
+    } else {
+      quizTopCenter.style.visibility = 'hidden';
+      quizTopRight.style.visibility = 'hidden';
+    }
+  }
 
-        function parseInput(text) {
+  function parseInput(text) {
     const lines = text.split(/\r?\n/);
     const parsed = [];
 
@@ -613,7 +614,5 @@
   loadFromStorage();
 
     </script>
-
-    <!-- heuirhqwiuerhiuqwehrqwehruiwqhriuqwehriuqwehqwekrjhqwijrhqwuierhiqwehriuqwehreiuqwehriuqwhruiqewhruiqwhiruhqwiurhqwierhuqwerriuqwr-->
 </body>
 </html>
