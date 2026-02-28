@@ -13,11 +13,12 @@
     <div id="app">
         <div id="overlay" class="overlay-dim">
             <div class="popup">
-                <h2>Game Over</h2>
+                <h2>Uh Oh... Game Over</h2>
                 <div class="popup-scores">
-                    <div>Current score: <span id="popupScore">0</span></div>
-                    <div>Best score: <span id="popupHighScore">0</span></div>
+                    <div>Your Current score: <span id="popupScore">0</span></div>
+                    <div>Your Best score: <span id="popupHighScore">0</span></div>
                 </div>
+
                 <div class="popup-buttons">
                     <button id="btnTryAgain" class="btn-primary">Try again</button>
                     <button id="btnReset" class="btn-secondary">Reset to start</button>
@@ -80,10 +81,11 @@
                 <button id="btnCreate" class="btn-primary">Create Questions</button>
             </div>
 
+
             <!-- saved sets -->
 
             <div class="saved-sets-row">
-                <label for="savedSetsSelect" style="font-size:13px;">Saved Sets:</label>
+                <label for="savedSetsSelect" style="font-size:13px;">Your Saved Sets:</label>
                 <select id="savedSetsSelect">
                     <option value="">(none)</option>
                 </select>
@@ -93,14 +95,14 @@
 
             <div class="bottom-bar">
                 <span>Simple practice, stays on device and with a AMAZING teal theming....</span>
-                <span style="font-size:11px;">Tip: when creating definitions manually, keep them short so you can type them quicker!</span>
+                <span style="font-size:11px;">Great Tip: when creating definitions manually, keep them short so you can type them quicker!</span>
             </div>
         </div>
 
         <!-- Screen 2 - waiting screen cus it looks pretty cool -->
         <div id="screen2" class="screen">
             <div class="centered">
-                <h2>Processing your terms - Get Ready...</h2>
+                <h2>Processing your terms - Get Ready to Play...</h2>
                 <p style="margin-top:6px;color:#546e7a;font-size:14px;">Checking the format and getting your questions ready!</p>
                 <div class="waiting-bar">
                     <div id="waitingFill" class="waiting-fill"></div>
@@ -116,8 +118,10 @@
                     <div class="question-text" id="questionText">Your question will appear here</div>
                 </div>
 
+                <!-- answering input area -->
+
                 <div class="answer-area">
-                    <input type="text" id="answerInput" placeholder="Type your answer and press Enter or Check" autocomplete="off">
+                    <input type="text" id="answerInput" placeholder="Type your answer and press Enter or Click Check" autocomplete="off">
                     <div style="margin-top:8px;display:flex;gap:8px;">
                         <button id="btnCheck" class="btn-primary" style="flex:0;">Check</button>
                         <button id="btnSkip" class="btn-secondary" style="flex:0;">Skip</button>
@@ -135,132 +139,132 @@
 
         <!-- saving indicator -->
         <div id="savedIndicator" class="saved-indicator">
-            Saved Locally
+            Saved Locally to your Device 
         </div>
     </div>
 
     <script>
         const screen1 = document.getElementById('screen1');
-  const screen2 = document.getElementById('screen2');
-  const screen3 = document.getElementById('screen3');
+        const screen2 = document.getElementById('screen2');
+        const screen3 = document.getElementById('screen3');
 
-  const quizTopCenter = document.getElementById('quizTopCenter');
-  const quizTopRight = document.getElementById('quizTopRight');
+        const quizTopCenter = document.getElementById('quizTopCenter');
+        const quizTopRight = document.getElementById('quizTopRight');
 
-  const pairsInput = document.getElementById('pairsInput');
-  const btnCreate = document.getElementById('btnCreate');
-  const inputError = document.getElementById('inputError');
+        const pairsInput = document.getElementById('pairsInput');
+        const btnCreate = document.getElementById('btnCreate');
+        const inputError = document.getElementById('inputError');
 
-  const waitingFill = document.getElementById('waitingFill');
+        const waitingFill = document.getElementById('waitingFill');
 
-  const btnBack = document.getElementById('btnBack');
-  const modeButtons = document.querySelectorAll('.mode-btn');
+        const btnBack = document.getElementById('btnBack');
+        const modeButtons = document.querySelectorAll('.mode-btn');
 
-  const questionLabel = document.getElementById('questionLabel');
-  const questionText = document.getElementById('questionText');
-  const answerInput = document.getElementById('answerInput');
-  const btnCheck = document.getElementById('btnCheck');
-  const btnSkip = document.getElementById('btnSkip');
-  const feedback = document.getElementById('feedback');
-  const questionCountInfo = document.getElementById('questionCountInfo');
+        const questionLabel = document.getElementById('questionLabel');
+        const questionText = document.getElementById('questionText');
+        const answerInput = document.getElementById('answerInput');
+        const btnCheck = document.getElementById('btnCheck');
+        const btnSkip = document.getElementById('btnSkip');
+        const feedback = document.getElementById('feedback');
+        const questionCountInfo = document.getElementById('questionCountInfo');
 
-  const pointsDisplay = document.getElementById('pointsDisplay');
-  const highScoreDisplay = document.getElementById('highScoreDisplay');
-  const heartsElems = document.querySelectorAll('.heart');
+        const pointsDisplay = document.getElementById('pointsDisplay');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const heartsElems = document.querySelectorAll('.heart');
 
-  const savedIndicator = document.getElementById('savedIndicator');
+        const savedIndicator = document.getElementById('savedIndicator');
 
-  const overlay = document.getElementById('overlay');
-  const popupScore = document.getElementById('popupScore');
-  const popupHighScore = document.getElementById('popupHighScore');
-  const btnTryAgain = document.getElementById('btnTryAgain');
-  const btnReset = document.getElementById('btnReset');
+        const overlay = document.getElementById('overlay');
+        const popupScore = document.getElementById('popupScore');
+        const popupHighScore = document.getElementById('popupHighScore');
+        const btnTryAgain = document.getElementById('btnTryAgain');
+        const btnReset = document.getElementById('btnReset');
 
-  const savedSetsSelect = document.getElementById('savedSetsSelect');
-  const btnLoadSet = document.getElementById('btnLoadSet');
-  const btnDeleteSet = document.getElementById('btnDeleteSet');
+        const savedSetsSelect = document.getElementById('savedSetsSelect');
+        const btnLoadSet = document.getElementById('btnLoadSet');
+        const btnDeleteSet = document.getElementById('btnDeleteSet');
 
-  let qaPairs = [];
-  let currentIndex = -1;
-  let currentDirection = 'termToDef';
-  let mode = 'term';
-  let points = 0;
-  let highScore = 0;
-  let hearts = 3;
-  let hadFirstWrong = false;
-  let totalAsked = 0;
+        let qaPairs = [];
+        let currentIndex = -1;
+        let currentDirection = 'termToDef';
+        let mode = 'term';
+        let points = 0;
+        let highScore = 0;
+        let hearts = 3;
+        let hadFirstWrong = false;
+        let totalAsked = 0;
 
-  let mustRetype = false;
-  let correctAnswerForRetype = "";
-  let pointsSinceHeart = 0;
+        let mustRetype = false;
+        let correctAnswerForRetype = "";
+        let pointsSinceHeart = 0;
 
-  let savingIntervalId = null;
-  let savedTimeoutId = null;
+        let savingIntervalId = null;
+        let savedTimeoutId = null;
 
-  let savedSets = {};
+        let savedSets = {};
 
-  function showScreen(id) {
-    [screen1, screen2, screen3].forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+        function showScreen(id) {
+          [screen1, screen2, screen3].forEach(s => s.classList.remove('active'));
+          document.getElementById(id).classList.add('active');
 
-    if (id === 'screen3') {
-      quizTopCenter.style.visibility = 'visible';
-      quizTopRight.style.visibility = 'visible';
-    } else {
-      quizTopCenter.style.visibility = 'hidden';
-      quizTopRight.style.visibility = 'hidden';
-    }
-  }
+          if (id === 'screen3') {
+            quizTopCenter.style.visibility = 'visible';
+            quizTopRight.style.visibility = 'visible';
+          } else {
+            quizTopCenter.style.visibility = 'hidden';
+            quizTopRight.style.visibility = 'hidden';
+          }
+        }
 
-  function parseInput(text) {
-    const lines = text.split(/\r?\n/);
-    const parsed = [];
+        function parseInput(text) {
+          const lines = text.split(/\r?\n/);
+          const parsed = [];
 
-    for (let raw of lines) {
-      const line = raw.trim();
-      if (!line) continue;
-      const parts = line.split(',');
-      if (parts.length !== 2) {
-        return null;
+          for (let raw of lines) {
+            const line = raw.trim();
+            if (!line) continue;
+            const parts = line.split(',');
+            if (parts.length !== 2) {
+              return null;
+            }
+            const term = parts[0].trim();
+            const def = parts[1].trim();
+            if (!term || !def) {
+              return null;
+            }
+            parsed.push({ term, definition: def });
+          }
+
+          if (parsed.length === 0) return null;
+          return parsed;
+        }
+
+        function loadFromStorage() {
+          try {
+            const storedHigh = localStorage.getItem('bbnb_high_score');
+            if (storedHigh !== null) {
+              highScore = parseInt(storedHigh, 10) || 0;
+            }
+            const storedSets = localStorage.getItem('bbnb_saved_sets');
+            if (storedSets) {
+              savedSets = JSON.parse(storedSets);
+            }
+          } catch (e) {
+            highScore = 0;
+            savedSets = {};
+          }
+          highScoreDisplay.textContent = highScore;
+          refreshSavedSetsSelect();
+        }
+
+      function saveToStorage() {
+        try {
+          localStorage.setItem('bbnb_high_score', String(highScore));
+          localStorage.setItem('bbnb_last_points', String(points));
+          localStorage.setItem('bbnb_saved_sets', JSON.stringify(savedSets));
+        } catch (e) {}
+        showSavedIndicator();
       }
-      const term = parts[0].trim();
-      const def = parts[1].trim();
-      if (!term || !def) {
-        return null;
-      }
-      parsed.push({ term, definition: def });
-    }
-
-    if (parsed.length === 0) return null;
-    return parsed;
-  }
-
-  function loadFromStorage() {
-    try {
-      const storedHigh = localStorage.getItem('bbnb_high_score');
-      if (storedHigh !== null) {
-        highScore = parseInt(storedHigh, 10) || 0;
-      }
-      const storedSets = localStorage.getItem('bbnb_saved_sets');
-      if (storedSets) {
-        savedSets = JSON.parse(storedSets);
-      }
-    } catch (e) {
-      highScore = 0;
-      savedSets = {};
-    }
-    highScoreDisplay.textContent = highScore;
-    refreshSavedSetsSelect();
-  }
-
-  function saveToStorage() {
-    try {
-      localStorage.setItem('bbnb_high_score', String(highScore));
-      localStorage.setItem('bbnb_last_points', String(points));
-      localStorage.setItem('bbnb_saved_sets', JSON.stringify(savedSets));
-    } catch (e) {}
-    showSavedIndicator();
-  }
 
   function startAutoSaving() {
     if (savingIntervalId) clearInterval(savingIntervalId);
